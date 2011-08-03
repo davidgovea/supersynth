@@ -1,3 +1,4 @@
+// Lifted straight from https://gist.github.com/701407 without shame
 var http = require("http"),
     url = require("url"),
     path = require("path"),
