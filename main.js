@@ -1,39 +1,43 @@
 (function(){
 	var HEIGHT	= 500,
-		WIDTH	= 700,
+		WIDTH	= 800,
 		imgObj	= new Image();
-		Game	= new mibbu(700,500, "mibbu");
+		Game	= new mibbu(800,500, "mibbu");
 	Game.fps().init();
 	
-	imgObj.src	= 'walka.png';
-	imgObj.src	= 'jumpa.png';
-	imgObj.src	= 'standa.png';
-	var mario	= new Game.spr('standa.png', 350, 400, 18, 1),
-		pipe	= new Game.spr('img/green.png', 100, 100, 1, 0),
+	imgObj.src	= 'images/walk.png';
+	imgObj.src	= 'images/jump.png';
+	imgObj.src	= 'images/stand.png';
+	var mario	= new Game.spr('images/stand.png', 200, 200, 18, 1),
+		pipe	= new Game.spr('images/pipe.png', 200, 125, 1, 0),
 		boxes	= [
-			new Game.spr('img/yellow.png', 100, 100, 1, 0),
-			new Game.spr('img/yellow.png', 100, 100, 1, 0),
-			new Game.spr('img/yellow.png', 100, 100, 1, 0)
+			new Game.spr('images/block.png', 116, 100, 3, 0),
+			new Game.spr('images/block.png', 116, 100, 3, 0),
+			new Game.spr('images/block.png', 116, 100, 3, 0)
 		],
-		bg		= new Game.bg('img/bg.png', 3, "S", {x:0,y:0}),
+		pow		= new Game.spr('images/pow.png', 118, 100, 3, 0),
+		ground	= new Game.spr('images/ground.png', 800, 78, 1, 0),
+		bg		= new Game.bg('images/bg.png', 3, "S", {x:0,y:0}),
 		
-		floor	= 0,
-		mheight	= 400,
-		mwidth	= 350,
-		mzero	= HEIGHT -floor - mheight,
+		floor	= 75,
+		mheight	= 200,
+		mwidth	= 200,
+		mzero	= HEIGHT -floor - mheight+15,
 		mleft	= 0,
 		mright	= WIDTH-mwidth,
-		pipeh	= 140,
-		pipew	= 150,
-		pipex	= 485,
+		pipeh	= 125,
+		pipew	= 200,
+		pipex	= 370,
 		pipey	= HEIGHT - floor - pipeh,
 		pipetop	= mzero - pipeh,
 		
 		xacc	= 10,
 		max_vx	= 50,
-		jumpv	= 185,
-		gravity	= 8,
+		jumpv	= 160,
+		gravity	= 11,
 		vscale	= 0.1;
+		
+	mario.zone(20,20,20,20);
 
 	_.extend(mario, {
 		vel: {
@@ -85,7 +89,7 @@
 			}
 			
 			if(start){
-				mario.change(mode+'a.png', 350, 400, num, 1);
+				mario.change('images/'+mode+'.png', 200, 200, num, 1);
 			}
 		//	if(dir !== mario.dir){
 				mario.animation((mario.dir<0) ? 0 : 1);
@@ -102,12 +106,16 @@
 	
 	mario.position(mario.pos.x, mario.pos.y, 6).speed(4);
 	
-	pipe.size(pipew, pipeh);
+	//pipe.size(pipew, pipeh);
 	pipe.position(pipex, pipey, 2).speed(0);
 
-	boxes[0].position(50, 100).speed(0);
-	boxes[1].position(180, 100).speed(0);
-	boxes[2].position(310, 100).speed(0);
+	boxes[0].position(45, 45).speed(8);
+	boxes[1].position(180, 45).speed(8);
+	boxes[2].position(610, 45).speed(8);
+	
+	pow.position(pipex+36, 2).speed(8);
+	
+	ground.position(0, HEIGHT-79).speed(0);
 	
 	bg.speed(0).dir(180).on();
 
@@ -119,8 +127,8 @@
 			state	= "walk";
 			mario.dir	= mario.sides;
 				
-			if(mario.pos.x <= mleft || mario.pos.x >= mright){
-				mario.pos.x = (mario.pos.x <= mleft) ? mleft + 1 : mright -1;
+			if(mario.pos.x <= mleft-80 || mario.pos.x >= mright+80){
+				mario.pos.x = (mario.pos.x <= mleft-80) ? mleft -79 : mright +79;
 				mario.vel.x = 0;
 				bgspeed = 7;
 			} else {
