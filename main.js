@@ -1,11 +1,15 @@
 (function(){
 	var HEIGHT	= 500,
 		WIDTH	= 700,
+		imgObj	= new Image();
 		Game	= new mibbu(700,500, "mibbu");
 	Game.fps().init();
 	
-	 mario	= new Game.spr('standa.png', 350, 400, 18, 1);
-		var pipe	= new Game.spr('img/green.png', 100, 100, 1, 0),
+	imgObj.src	= 'walka.png';
+	imgObj.src	= 'jumpa.png';
+	imgObj.src	= 'standa.png';
+	var mario	= new Game.spr('standa.png', 350, 400, 18, 1),
+		pipe	= new Game.spr('img/green.png', 100, 100, 1, 0),
 		boxes	= [
 			new Game.spr('img/yellow.png', 100, 100, 1, 0),
 			new Game.spr('img/yellow.png', 100, 100, 1, 0),
@@ -27,8 +31,8 @@
 		
 		xacc	= 10,
 		max_vx	= 50,
-		jumpv	= 65,
-		gravity	= 1,
+		jumpv	= 185,
+		gravity	= 8,
 		vscale	= 0.1;
 
 	_.extend(mario, {
@@ -48,9 +52,10 @@
 		dir:	1,
 		mode:	function(mode, direction){
 			var	start	= false,
-				dir		= direction || 0,
+				dir		= direction || mario.dir,
 				num;
-				
+			
+			mario.dir = dir;
 			switch(mode){
 			case 'stand':
 				if(mario.state !== 0){
@@ -83,8 +88,8 @@
 				mario.change(mode+'a.png', 350, 400, num, 1);
 			}
 		//	if(dir !== mario.dir){
-				mario.animation(dir);
-				mario.dir = dir;
+				mario.animation((mario.dir<0) ? 0 : 1);
+				//mario.dir = dir;
 		//	}
 			mario.position(mario.x, mario.y);
 			// console.log(mario.dir);
@@ -107,17 +112,25 @@
 	bg.speed(0).dir(180).on();
 
 	function moveHandler(){
-		var state	= "stand", 
-			dir		;//= mario.dir;
+		var state	= "stand",
+			bgspeed	= 0;
 			
 		if(mario.sides){
 			state	= "walk";
-			dir		= (mario.sides<0) ? 0 : 1;
-			mario.vel.x	+= mario.sides * xacc;
-			mario.vel.x	= (Math.abs(mario.vel.x) > max_vx) ? mario.sides*max_vx : mario.vel.x;
+			mario.dir	= mario.sides;
+				
+			if(mario.pos.x <= mleft || mario.pos.x >= mright){
+				mario.pos.x = (mario.pos.x <= mleft) ? mleft + 1 : mright -1;
+				mario.vel.x = 0;
+				bgspeed = 7;
+			} else {
+				mario.vel.x	+= mario.dir * xacc;
+				mario.vel.x	= (Math.abs(mario.vel.x) > max_vx) ? mario.sides*max_vx : mario.vel.x;
+			}
+			
 		} else {
 			if(mario.vel.x !== 0) {
-				mario.vel.x = Math.floor(mario.vel.x / 4);
+				mario.vel.x *= 0.8;
 			}
 		}
 		
@@ -140,8 +153,8 @@
 		
 		mario.pos.x	+= mario.vel.x * vscale;
 		mario.pos.y	+= mario.vel.y * vscale;
-		mario.mode(state, dir).position(mario.pos.x, mario.pos.y);
-		
+		mario.mode(state, mario.dir).position(mario.pos.x, mario.pos.y);
+		bg.speed(bgspeed * mario.dir);
 		
 	}
 	
