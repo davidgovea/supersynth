@@ -1,14 +1,17 @@
 (function(){
 	var HEIGHT	= 500,
 		WIDTH	= 800,
-		imgObj	= new Image();
+		walkImg	= new Image(),
+		standImg= new Image(),
+		jumpImg	= new Image(),
 		Game	= new mibbu(800,500, "mibbu");
 	Game.fps().init();
 	
-	imgObj.src	= 'images/walk.png';
-	imgObj.src	= 'images/jump.png';
-	imgObj.src	= 'images/stand.png';
-	var mario	= new Game.spr('images/stand.png', 200, 200, 18, 1),
+	walkImg.src	= 'images/walk.png';
+	jumpImg.src	= 'images/jump.png';
+	standImg.src= 'images/stand.png';
+	
+	var mario	= new Game.spr(standImg.src, 200, 200, 18, 1),
 		pipe	= new Game.spr('images/pipe.png', 200, 125, 1, 0),
 		boxes	= [
 			new Game.spr('images/block.png', 116, 100, 3, 0),
@@ -59,7 +62,7 @@
 		mode:	function(mode, direction){
 			var	start	= false,
 				dir		= direction,
-				num;
+				num, src;
 			
 			//mario.dir = dir;
 			switch(mode){
@@ -68,6 +71,7 @@
 					start = true;
 					mario.state = 0;
 				}
+				src = standImg.src;
 				num = 18;
 				break;
 				
@@ -76,6 +80,7 @@
 					start = true;
 					mario.state = 1;
 				}
+				src = walkImg.src;
 				num = 15;
 				break;
 				
@@ -84,6 +89,7 @@
 					start = true;
 					mario.state = 2;
 				}
+				src = jumpImg.src;
 				num = 2;
 				break;
 				
@@ -91,7 +97,7 @@
 			}
 			
 			if(start){
-				mario.change('images/'+mode+'.png', 200, 200, num, 1);
+				mario.change(src, 200, 200, num, 1);
 				mario.zone(mzone[0],mzone[1],mzone[2],mzone[3]);
 			}
 			if(dir !== 0 && dir !== mario.dir){				
@@ -125,6 +131,7 @@
 			bgspeed	= 0;
 		
 		if(!mario.under){
+			console.time('aa');
 			if(mario.sides){
 				state	= "walk";
 				//mario.dir	= mario.sides;
@@ -171,6 +178,7 @@
 			mario.pos.y	+= mario.vel.y * vscale;
 			mario.mode(state, mario.sides).position(mario.pos.x, mario.pos.y);
 			bg.speed(bgspeed * mario.sides);
+			console.timeEnd('aa');
 		} else {
 			if(mario.up == 1){
 				mario.vel.y = -4;
