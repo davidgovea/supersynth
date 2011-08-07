@@ -439,7 +439,12 @@ mariotheme = [
     notes:[
         'F5', 'G5', 'C6'
     ],
-    dur: 1/2
+    dur: 1/4 + 1/8
+},
+{
+    notes:[
+    ],
+    dur: 1/8
 },
 //15
 {
@@ -700,7 +705,12 @@ mariotheme = [
     notes:[
         'F5', 'G5', 'C6'
     ],
-    dur: 1/2
+    dur: 1/4 + 1/8
+},
+{
+    notes:[
+    ],
+    dur: 1/8
 },
 //23
 {

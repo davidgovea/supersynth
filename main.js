@@ -50,7 +50,7 @@
 				}
 
 				for (n=0; n<channelCount; n++){
-					buffer[current + n] = lpf.pushSample(reverb[n].pushSample(bit(comp.pushSample(sample))));
+					buffer[current + n] = lpf.pushSample(reverb[n].pushSample(comb(bit(comp.pushSample(sample)))));
 				}
 				leadNote -= 1;
 				//console.log(leadNote);
@@ -69,8 +69,10 @@
 		comp	= new audioLib.Compressor(sampleRate, 3, 0.5),
 		reverb	= [new audioLib.Reverb(sampleRate, false), new audioLib.Reverb(sampleRate, true)],
 		lpf		= new audioLib.BiquadFilter.LowPass(sampleRate, 1500, 0.6),
-		bitCr	= new audioLib.BitCrusher(sampleRate, 3);
+		bitCr	= new audioLib.BitCrusher(sampleRate, 3),
+		cf		= new audioLib.CombFilter(sampleRate, 800, 0.55, 0.3);
 		
+	function comb(s){return s;}
 	function bit(s){return s;}
 	reverb[0].wet = reverb[1].wet = 0.1;
 	reverb[0].dry = reverb[1].dry = 0.8;
@@ -93,7 +95,6 @@
 		boxes	= [
 			new Game.spr('images/block.png', 116, 100, 3, 0),
 			new Game.spr('images/block.png', 116, 100, 3, 0),
-			new Game.spr('images/block.png', 116, 100, 3, 0)
 		],
 		pow		= new Game.spr('images/pow.png', 118, 100, 3, 0),
 		ground	= new Game.spr('images/ground.png', 800, 78, 1, 0),
@@ -193,11 +194,10 @@
 	//pipe.size(pipew, pipeh);
 	pipe.position(pipex, HEIGHT-floor-15, 2).speed(0).noHits();
 
-	boxes[0].position(50, 55).speed(8);
-	boxes[1].position(250, 55).speed(8);
-	boxes[2].position(650, 55).speed(8);
+	boxes[0].position(100, 55).speed(8);
+	boxes[1].position(350, 55).speed(8);
 	
-	pow.position(450, 55).speed(8);
+	pow.position(600, 55).speed(8);
 	
 	ground.position(0, HEIGHT-79, 2).speed(0);
 	
@@ -324,32 +324,37 @@
 	
 	
 	
-	var shapes = ['square', 'sawtooth', 'sine', 'triangle'];
+	var shapes = ['sawtooth', 'sine', 'square', 'triangle'];
 	mario.hit(boxes[0], function(){
 		var s = shapes.shift();
 		mario.vel.y = 0;
-		boxes[0].position(50, 48);
+		boxes[0].position(100, 48);
 		setTimeout(function(){
-			boxes[0].position(50,55);
+			boxes[0].position(100,55);
 		}, 200)
 		leads[0].waveShape = leads[1].waveShape = leads[2].waveShape = s;
 		shapes.push(s);
 	});
-	mario.hit(boxes[1], function(){
-		mario.vel.y = 0;
-		boxes[1].position(250, 48);
-		setTimeout(function(){
-			boxes[1].position(250,55);
-		}, 200)
-	});
-	mario.hit(boxes[2], function(){
-		mario.vel.y = 0;
-		boxes[2].position(650, 48);
-		setTimeout(function(){
-			boxes[2].position(650,55);
-		}, 200)
-	});
 	
+	var combs = [10000, 44000, null];
+	mario.hit(boxes[1], function(){
+		var c = combs.shift();
+		mario.vel.y = 0;
+		boxes[1].position(350, 48);
+		setTimeout(function(){
+			boxes[1].position(350,55);
+		}, 200)
+		if(c){
+			cf.bufferSize = c;
+			cf.reset();
+			comb = function(s){return cf.pushSample(s)}
+		} else {
+			comb = function(s){return s;}
+		}
+		combs.push(c);
+		
+	});
+
 	pow.step = 0;
 	mario.hit(pow, function(){
 		var h;
@@ -374,16 +379,16 @@
 		pow.size(118, h);
 		if(pow.step != 3){
 			bit = function(s){return bitCr.pushSample(s);};
-			pow.position(450, 55);
+			pow.position(600, 55);
 			if(pow.step == 2){
 				setTimeout(function(){
-					pow.position(450,55+28);
+					pow.position(600,55+28);
 				}, 200)
 			}
 		} else {
-			pow.position(450, 20)
+			pow.position(600, 20)
 			setTimeout(function(){
-				pow.position(450,55);
+				pow.position(600,55);
 			}, 150)
 		}
 			

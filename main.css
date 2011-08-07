@@ -6,3 +6,14 @@ div#content {
 div#mibbu {
 	height: 500px;
 }
+
+div.s {
+	margin-top: 10px;
+}
+
+iframe {
+	width: 800;
+	height: 700;
+	margin:0;
+	padding:0;
+}
