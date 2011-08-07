@@ -5,6 +5,8 @@
 		noteTotal	= theme.length,
 		leadNote	= 0,
 		leadCount	= 0,
+		fade		= 0,
+		fadePoint	= 0,
 		loadNote	= function(){
 			var note	= theme[noteCount],
 				l		= note.notes.length,
@@ -20,6 +22,9 @@
 			}
 			leadCount = l;
 			leadNote = Math.floor(note.dur * sampleRate * 1.2);
+			fade = 0;
+			fadePoint = leadNote - 300;
+			
 			noteCount += 1;
 			if(noteCount >= theme.length) noteCount = 0;
 		},
@@ -30,14 +35,22 @@
 			for(current=0; current<l; current+= channelCount){
 				if(leadNote == 0) loadNote();
 				
+				if(leadNote > fadePoint){
+					fade = 1 - (leadNote-fadePoint)/300;
+				} else if(leadNote<300){
+					fade = leadNote/300;
+				} else {
+					fade = 1;
+				}
+				
 				sample = 0;
 				for(i=0; i<leadCount; i++){
 					leads[i].generate();
-					sample += leads[i].getMix()*0.5*((leadNote<100) ? leadNote/100 : 1);
+					sample += leads[i].getMix()*0.5*fade;
 				}
 
 				for (n=0; n<channelCount; n++){
-					buffer[current + n] = reverb[n].pushSample(comp.pushSample(sample));
+					buffer[current + n] = lpf.pushSample(reverb[n].pushSample(bit(comp.pushSample(sample))));
 				}
 				leadNote -= 1;
 				//console.log(leadNote);
@@ -54,10 +67,14 @@
 		],
 		bass	= new audioLib.Oscillator(sampleRate, 0),
 		comp	= new audioLib.Compressor(sampleRate, 3, 0.5),
-		reverb	= [new audioLib.Reverb(sampleRate, false), new audioLib.Reverb(sampleRate, true)];
+		reverb	= [new audioLib.Reverb(sampleRate, false), new audioLib.Reverb(sampleRate, true)],
+		lpf		= new audioLib.BiquadFilter.LowPass(sampleRate, 1500, 0.6),
+		bitCr	= new audioLib.BitCrusher(sampleRate, 3);
 		
+	function bit(s){return s;}
 	reverb[0].wet = reverb[1].wet = 0.1;
 	reverb[0].dry = reverb[1].dry = 0.8;
+	leads[0].waveShape = leads[1].waveShape = leads[2].waveShape = 'triangle';
 			
 	var HEIGHT	= 500,
 		WIDTH	= 800,
@@ -242,6 +259,8 @@
 		} else {
 			if(mario.up == 1){
 				mario.vel.y = -4;
+				reverb[0].wet = reverb[1].wet = 0.1;
+				reverb[0].dry = reverb[1].dry = 0.8;
 			}
 			if(mario.pos.y < mzero+mheight || mario.vel.y < 0){				
 				mario.pos.y += mario.vel.y;
@@ -249,8 +268,6 @@
 			if(mario.vel.y < 0 && mario.pos.y <= mzero){
 				mario.under = false;
 				mario.pos.y = mzero;
-				reverb[0].wet = reverb[1].wet = 0.1;
-				reverb[0].dry = reverb[1].dry = 0.8;
 			}
 			mario.position(mario.pos.x, mario.pos.y);
 		}
@@ -307,13 +324,16 @@
 	
 	
 	
-		
+	var shapes = ['square', 'sawtooth', 'sine', 'triangle'];
 	mario.hit(boxes[0], function(){
+		var s = shapes.shift();
 		mario.vel.y = 0;
 		boxes[0].position(50, 48);
 		setTimeout(function(){
 			boxes[0].position(50,55);
 		}, 200)
+		leads[0].waveShape = leads[1].waveShape = leads[2].waveShape = s;
+		shapes.push(s);
 	});
 	mario.hit(boxes[1], function(){
 		mario.vel.y = 0;
@@ -336,12 +356,15 @@
 		pow.step++;
 		switch(pow.step){
 		case 1: 
+			bitCr.resolution = Math.pow(2, 2);
 			h = 80;
 			break;
 		case 2:
+			bitCr.resolution = Math.pow(2, 1);
 			h = 50;
 			break;
 		case 3:
+			bit = function(s){return s;};
 			h = 100;
 			break;
 		default:
@@ -350,6 +373,7 @@
 		
 		pow.size(118, h);
 		if(pow.step != 3){
+			bit = function(s){return bitCr.pushSample(s);};
 			pow.position(450, 55);
 			if(pow.step == 2){
 				setTimeout(function(){
