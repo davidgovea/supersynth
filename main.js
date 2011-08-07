@@ -1,4 +1,64 @@
 (function(){
+	var	theme	= mariotheme,
+		samplesPlayed	= 0,
+		noteCount	= 0,
+		noteTotal	= theme.length,
+		leadNote	= 0,
+		leadCount	= 0,
+		loadNote	= function(){
+			var note	= theme[noteCount],
+				l		= note.notes.length,
+				i;
+			
+			for(i=0; i<leads.length; i++){
+				leads[i].frequency = 0;
+				leads[i].reset();
+			}
+			
+			for(i=0; i < l; i++){
+				leads[i].frequency = Note.fromLatin(note.notes[i]).frequency();
+			}
+			leadCount = l;
+			leadNote = Math.floor(note.dur * sampleRate * 1.2);
+			noteCount += 1;
+			if(noteCount >= theme.length) noteCount = 0;
+		},
+		dev	= new audioLib.AudioDevice(function(buffer, channelCount){
+			var l	= buffer.length,
+				l2	= leads.length,
+				sample, note, i, n, current, notes;
+			for(current=0; current<l; current+= channelCount){
+				if(leadNote == 0) loadNote();
+				
+				sample = 0;
+				for(i=0; i<leadCount; i++){
+					leads[i].generate();
+					sample += leads[i].getMix()*0.5*((leadNote<100) ? leadNote/100 : 1);
+				}
+
+				for (n=0; n<channelCount; n++){
+					buffer[current + n] = reverb[n].pushSample(comp.pushSample(sample));
+				}
+				leadNote -= 1;
+				//console.log(leadNote);
+			}
+			//console.log(buffer);
+			
+			
+		},2),
+		sampleRate	= dev.sampleRate,
+		leads	= [
+			new audioLib.Oscillator(sampleRate, 220),
+			new audioLib.Oscillator(sampleRate, 440),
+			new audioLib.Oscillator(sampleRate, 0)
+		],
+		bass	= new audioLib.Oscillator(sampleRate, 0),
+		comp	= new audioLib.Compressor(sampleRate, 3, 0.5),
+		reverb	= [new audioLib.Reverb(sampleRate, false), new audioLib.Reverb(sampleRate, true)];
+		
+	reverb[0].wet = reverb[1].wet = 0.1;
+	reverb[0].dry = reverb[1].dry = 0.8;
+			
 	var HEIGHT	= 500,
 		WIDTH	= 800,
 		walkImg	= new Image(),
@@ -131,7 +191,6 @@
 			bgspeed	= 0;
 		
 		if(!mario.under){
-			console.time('aa');
 			if(mario.sides){
 				state	= "walk";
 				//mario.dir	= mario.sides;
@@ -172,13 +231,14 @@
 				state = "stand";
 				mario.under = true;
 				mario.vel.y = 4;
+				reverb[0].wet = reverb[1].wet = 0.8;
+				reverb[0].dry = reverb[1].dry = 0.1;
 			}
 			
 			mario.pos.x	+= mario.vel.x * vscale;
 			mario.pos.y	+= mario.vel.y * vscale;
 			mario.mode(state, mario.sides).position(mario.pos.x, mario.pos.y);
 			bg.speed(bgspeed * mario.sides);
-			console.timeEnd('aa');
 		} else {
 			if(mario.up == 1){
 				mario.vel.y = -4;
@@ -189,6 +249,8 @@
 			if(mario.vel.y < 0 && mario.pos.y <= mzero){
 				mario.under = false;
 				mario.pos.y = mzero;
+				reverb[0].wet = reverb[1].wet = 0.1;
+				reverb[0].dry = reverb[1].dry = 0.8;
 			}
 			mario.position(mario.pos.x, mario.pos.y);
 		}
