@@ -6,4 +6,4 @@ supersynth is an interactive HTML5 synthesizer which generates and manipulates t
  * [mibbu](https://github.com/michalbe/mibbu) HTML5 game microframework
 
 ## Graphics
-Drawn by Patrick Burton - http://gwock.com
+Drawn by Patrick Russell Burton - http://gwock.com
