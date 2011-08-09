@@ -294,6 +294,7 @@
 				break;
 		}
 		e.stopPropagation();
+		e.preventDefault();
 	}
 	var catchKeyUp = function(e) {
 		switch (e.keyCode) {
